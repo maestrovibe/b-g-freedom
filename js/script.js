@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', function () {
+  // Highlight the nav link matching the current page (fixes active-link
+  // indicator only ever showing on Home)
+  var currentPage = location.pathname.split('/').pop();
+  if (currentPage === '') currentPage = 'index.html';
+  document.querySelectorAll('.nav-desktop a, .nav-mobile a').forEach(function (link) {
+    var href = (link.getAttribute('href') || '').split('/').pop();
+    if (href === currentPage) {
+      link.setAttribute('aria-current', 'page');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  });
+
   var toggle = document.querySelector('.menu-toggle');
   var nav = document.querySelector('.nav-mobile');
   if (toggle && nav) {
