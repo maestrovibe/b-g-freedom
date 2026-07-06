@@ -12,15 +12,54 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Hero slideshow: crossfade between multiple background images
+  // Hero slideshow: crossfade between multiple background images.
+  // The first slide's image loads immediately (it's in the initial HTML).
+  // The rest are only fetched after window 'load', so they never compete
+  // with critical page resources for bandwidth.
   var heroSlides = document.querySelectorAll('.hero-slideshow .hero-media');
   if (heroSlides.length > 1) {
-    var currentSlide = 0;
-    setInterval(function () {
-      heroSlides[currentSlide].classList.remove('is-active');
-      currentSlide = (currentSlide + 1) % heroSlides.length;
-      heroSlides[currentSlide].classList.add('is-active');
-    }, 5000);
+    var startSlideshow = function () {
+      var loadedCount = 0;
+      var lazySlides = [];
+      heroSlides.forEach(function (slide) {
+        var src = slide.getAttribute('data-bg');
+        if (src) lazySlides.push({ el: slide, src: src });
+      });
+
+      var applyBg = function (item) {
+        item.el.style.backgroundImage = "url('" + item.src + "')";
+      };
+
+      if (lazySlides.length === 0) {
+        runRotation();
+        return;
+      }
+
+      lazySlides.forEach(function (item) {
+        var img = new Image();
+        img.onload = img.onerror = function () {
+          applyBg(item);
+          loadedCount++;
+          if (loadedCount === lazySlides.length) runRotation();
+        };
+        img.src = item.src;
+      });
+    };
+
+    var runRotation = function () {
+      var currentSlide = 0;
+      setInterval(function () {
+        heroSlides[currentSlide].classList.remove('is-active');
+        currentSlide = (currentSlide + 1) % heroSlides.length;
+        heroSlides[currentSlide].classList.add('is-active');
+      }, 5000);
+    };
+
+    if (document.readyState === 'complete') {
+      startSlideshow();
+    } else {
+      window.addEventListener('load', startSlideshow);
+    }
   }
 
   var toggle = document.querySelector('.menu-toggle');
